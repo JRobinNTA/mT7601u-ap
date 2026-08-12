@@ -118,11 +118,18 @@ u16 mt76_mac_tx_rate_val(struct mt7601u_dev *dev,
 		if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
 			bw = 1;
 	} else {
-		const struct ieee80211_rate *r;
+
 		int band = dev->chandef.chan->band;
+		struct ieee80211_supported_band *sband = dev->hw->wiphy->bands[band];
+		
+		if (rate->idx < 0 || rate->idx >= sband->n_bitrates) {
+			phy = MT_PHY_TYPE_CCK;
+			rate_idx = 0;
+			bw = 0;
+		} else {
+		const struct ieee80211_rate *r = &sband->bitrates[rate->idx];
 		u16 val;
 
-		r = &dev->hw->wiphy->bands[band]->bitrates[rate->idx];
 		if (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
 			val = r->hw_value_short;
 		else
@@ -131,6 +138,7 @@ u16 mt76_mac_tx_rate_val(struct mt7601u_dev *dev,
 		phy = val >> 8;
 		rate_idx = val & 0xff;
 		bw = 0;
+ 		}
 	}
 
 	rateval = FIELD_PREP(MT_RXWI_RATE_MCS, rate_idx);

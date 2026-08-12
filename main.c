@@ -149,11 +149,7 @@ mt7601u_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		 *	 rt2x00 doesn't seem to be bothered though.
 		 */
 		if (is_zero_ether_addr(info->bssid))
-<<<<<<< HEAD
-			mt7601u_mac_config_tsf(dev, false, 0);
-=======
 			mt7601u_mac_config_tsf(dev, vif, false, 0);
->>>>>>> c625a67 (mt7601u: Implemented AP mode)
 	}
 
 	if (changed & BSS_CHANGED_BASIC_RATES) {
@@ -165,9 +161,6 @@ mt7601u_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	}
 
 	if (changed & BSS_CHANGED_BEACON_INT)
-<<<<<<< HEAD
-		mt7601u_mac_config_tsf(dev, true, info->beacon_int);
-=======
 		mt7601u_mac_config_tsf(dev, vif, true, info->beacon_int);
 
 	if ((changed & BSS_CHANGED_BEACON) && vif->type == NL80211_IFTYPE_AP)
@@ -179,7 +172,6 @@ mt7601u_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		else
 			mt76_clear(dev, MT_BEACON_TIME_CFG, MT_BEACON_TIME_CFG_BEACON_TX);
 	}
->>>>>>> c625a67 (mt7601u: Implemented AP mode)
 
 	if (changed & BSS_CHANGED_HT || changed & BSS_CHANGED_ERP_CTS_PROT)
 		mt7601u_mac_set_protection(dev, info->use_cts_prot,
@@ -202,8 +194,6 @@ mt7601u_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 }
 
 static int
-<<<<<<< HEAD
-=======
 mt7601u_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		struct ieee80211_bss_conf *link_conf)
 {
@@ -244,7 +234,6 @@ mt7601u_stop_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 }
 
 static int
->>>>>>> c625a67 (mt7601u: Implemented AP mode)
 mt76_wcid_alloc(struct mt7601u_dev *dev)
 {
 	int i, idx = 0;
@@ -480,11 +469,8 @@ const struct ieee80211_ops mt7601u_ops = {
 	.config = mt7601u_config,
 	.configure_filter = mt76_configure_filter,
 	.bss_info_changed = mt7601u_bss_info_changed,
-<<<<<<< HEAD
-=======
 	.start_ap = mt7601u_start_ap,
 	.stop_ap = mt7601u_stop_ap,
->>>>>>> c625a67 (mt7601u: Implemented AP mode)
 	.sta_add = mt7601u_sta_add,
 	.sta_remove = mt7601u_sta_remove,
 	.sta_notify = mt7601u_sta_notify,
