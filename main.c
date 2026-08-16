@@ -165,12 +165,15 @@ mt7601u_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 
 	if ((changed & BSS_CHANGED_BEACON) && vif->type == NL80211_IFTYPE_AP)
 		mt7601u_mac_set_beacon(dev, vif, info);
-	
-	if ((changed & BSS_CHANGED_BEACON_ENABLED) && vif->type == NL80211_IFTYPE_AP){
+
+	if ((changed & BSS_CHANGED_BEACON_ENABLED) &&
+	    vif->type == NL80211_IFTYPE_AP) {
 		if (info->enable_beacon)
-			mt76_set(dev, MT_BEACON_TIME_CFG, MT_BEACON_TIME_CFG_BEACON_TX);
+			mt76_set(dev, MT_BEACON_TIME_CFG,
+				 MT_BEACON_TIME_CFG_BEACON_TX);
 		else
-			mt76_clear(dev, MT_BEACON_TIME_CFG, MT_BEACON_TIME_CFG_BEACON_TX);
+			mt76_clear(dev, MT_BEACON_TIME_CFG,
+				   MT_BEACON_TIME_CFG_BEACON_TX);
 	}
 
 	if (changed & BSS_CHANGED_HT || changed & BSS_CHANGED_ERP_CTS_PROT)
@@ -193,9 +196,8 @@ mt7601u_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	mutex_unlock(&dev->mutex);
 }
 
-static int
-mt7601u_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-		struct ieee80211_bss_conf *link_conf)
+static int mt7601u_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+			    struct ieee80211_bss_conf *link_conf)
 {
 	struct mt7601u_dev *dev = hw->priv;
 	int err = 0;
@@ -203,9 +205,8 @@ mt7601u_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	mutex_lock(&dev->mutex);
 
 	/* Clear the wcid Table */
-	for(int i = 1; i < 128; i++){
+	for (int i = 1; i < 128; i++)
 		mt7601u_mac_wcid_setup(dev, i, 0, NULL);
-	}
 
 	/* Set pre TBTT to 6ms */
 	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_PRE_TBTT, 6);
@@ -218,9 +219,8 @@ mt7601u_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	return err;
 }
 
-static void
-mt7601u_stop_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-	       struct ieee80211_bss_conf *link_conf)
+static void mt7601u_stop_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+			    struct ieee80211_bss_conf *link_conf)
 {
 	struct mt7601u_dev *dev = hw->priv;
 

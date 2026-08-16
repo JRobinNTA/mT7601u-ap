@@ -120,25 +120,25 @@ u16 mt76_mac_tx_rate_val(struct mt7601u_dev *dev,
 	} else {
 
 		int band = dev->chandef.chan->band;
-		struct ieee80211_supported_band *sband = dev->hw->wiphy->bands[band];
-		
+		struct ieee80211_supported_band *sband =
+			dev->hw->wiphy->bands[band];
+
 		if (rate->idx < 0 || rate->idx >= sband->n_bitrates) {
 			phy = MT_PHY_TYPE_CCK;
 			rate_idx = 0;
-			bw = 0;
 		} else {
-		const struct ieee80211_rate *r = &sband->bitrates[rate->idx];
-		u16 val;
+			const struct ieee80211_rate *r =
+				&sband->bitrates[rate->idx];
+			u16 val;
 
-		if (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
-			val = r->hw_value_short;
-		else
-			val = r->hw_value;
+			if (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+				val = r->hw_value_short;
+			else
+				val = r->hw_value;
 
-		phy = val >> 8;
-		rate_idx = val & 0xff;
-		bw = 0;
- 		}
+			phy = val >> 8;
+			rate_idx = val & 0xff;
+		}
 	}
 
 	rateval = FIELD_PREP(MT_RXWI_RATE_MCS, rate_idx);
@@ -272,14 +272,13 @@ void mt7601u_mac_set_short_preamble(struct mt7601u_dev *dev, bool short_preamb)
 		mt76_clear(dev, MT_AUTO_RSP_CFG, MT_AUTO_RSP_PREAMB_SHORT);
 }
 
-void mt7601u_mac_config_tsf(struct mt7601u_dev *dev, struct ieee80211_vif *vif, bool enable, int interval)
+void mt7601u_mac_config_tsf(struct mt7601u_dev *dev, struct ieee80211_vif *vif,
+			    bool enable, int interval)
 {
 	u32 val = mt7601u_rr(dev, MT_BEACON_TIME_CFG);
 
-	val &= ~(MT_BEACON_TIME_CFG_TIMER_EN |
-		 MT_BEACON_TIME_CFG_SYNC_MODE |
-		 MT_BEACON_TIME_CFG_TBTT_EN |
-		 MT_BEACON_TIME_CFG_BEACON_TX);
+	val &= ~(MT_BEACON_TIME_CFG_TIMER_EN | MT_BEACON_TIME_CFG_SYNC_MODE |
+		 MT_BEACON_TIME_CFG_TBTT_EN | MT_BEACON_TIME_CFG_BEACON_TX);
 
 	if (!enable) {
 		mt7601u_wr(dev, MT_BEACON_TIME_CFG, val);
@@ -288,16 +287,20 @@ void mt7601u_mac_config_tsf(struct mt7601u_dev *dev, struct ieee80211_vif *vif, 
 
 	val &= ~MT_BEACON_TIME_CFG_INTVAL;
 	val |= FIELD_PREP(MT_BEACON_TIME_CFG_INTVAL, interval << 4) |
-		MT_BEACON_TIME_CFG_TIMER_EN |
-		MT_BEACON_TIME_CFG_TBTT_EN;
+	       MT_BEACON_TIME_CFG_TIMER_EN | MT_BEACON_TIME_CFG_TBTT_EN;
 
 	/* AP Mode */
-        if (vif && vif->type == NL80211_IFTYPE_AP)
-            val |= FIELD_PREP(MT_BEACON_TIME_CFG_SYNC_MODE, 3) |
-		    MT_BEACON_TIME_CFG_BEACON_TX;
-        else
+	if (vif && (vif->type == NL80211_IFTYPE_AP ||
+		    vif->type == NL80211_IFTYPE_P2P_GO))
+		val |= FIELD_PREP(MT_BEACON_TIME_CFG_SYNC_MODE, 3) |
+		       MT_BEACON_TIME_CFG_BEACON_TX;
+	/* IBSS / Ad-Hoc Mode */
+	else if (vif && vif->type == NL80211_IFTYPE_ADHOC)
+		val |= FIELD_PREP(MT_BEACON_TIME_CFG_SYNC_MODE, 2) |
+		       MT_BEACON_TIME_CFG_BEACON_TX;
 	/* Station mode */
-            val |= FIELD_PREP(MT_BEACON_TIME_CFG_SYNC_MODE, 1);
+	else
+		val |= FIELD_PREP(MT_BEACON_TIME_CFG_SYNC_MODE, 1);
 
 	mt7601u_wr(dev, MT_BEACON_TIME_CFG, val);
 }
@@ -411,18 +414,19 @@ void mt7601u_mac_set_ampdu_factor(struct mt7601u_dev *dev)
 		   FIELD_PREP(MT_MAX_LEN_CFG_AMPDU, min_factor));
 }
 
-int mt7601u_mac_set_beacon(struct mt7601u_dev *dev, struct ieee80211_vif *vif, 
-		struct ieee80211_bss_conf *info){
-	struct sk_buff * skb = ieee80211_beacon_get(dev->hw, vif, 0);
+int mt7601u_mac_set_beacon(struct mt7601u_dev *dev, struct ieee80211_vif *vif,
+			   struct ieee80211_bss_conf *info)
+{
+	struct sk_buff *skb = ieee80211_beacon_get(dev->hw, vif, 0);
 	struct mt76_txwi *txwi;
 	int err, words;
 
-	if(!skb)
+	if (!skb)
 		return 0;
 
 	/* USB devices already reserve enough skb headroom */
 	err = skb_cow_head(skb, sizeof(struct mt76_txwi));
-	if(err){
+	if (err) {
 		dev_kfree_skb(skb);
 		return err;
 	}
@@ -433,9 +437,10 @@ int mt7601u_mac_set_beacon(struct mt7601u_dev *dev, struct ieee80211_vif *vif,
 	txwi->wcid = 0;
 	txwi->len_ctl = cpu_to_le16(skb->len - sizeof(struct mt76_txwi));
 	txwi->rate_ctl = cpu_to_le16(0);
-	
+
 	words = DIV_ROUND_UP(skb->len, 4);
-	err = mt7601u_burst_write_regs(dev, MT_BEACON_BASE, (const u32 *)skb->data, words);
+	err = mt7601u_burst_write_regs(dev, MT_BEACON_BASE,
+				       (const u32 *)skb->data, words);
 	dev_kfree_skb(skb);
 
 	return err;

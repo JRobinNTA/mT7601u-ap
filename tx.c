@@ -30,7 +30,8 @@ static u8 skb2q(struct sk_buff *skb)
 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
 
-	if(ieee80211_is_mgmt(hdr->frame_control) || (info->flags & IEEE80211_TX_CTL_INJECTED)){
+	if (ieee80211_is_mgmt(hdr->frame_control) ||
+	    (info->flags & IEEE80211_TX_CTL_INJECTED)) {
 		skb_set_queue_mapping(skb, MT_TXQ_VO);
 		return q2hwq(MT_TXQ_VO);
 	}
@@ -165,9 +166,8 @@ mt7601u_push_txwi(struct mt7601u_dev *dev, struct sk_buff *skb,
 	spin_unlock_irqrestore(&dev->lock, flags);
 	txwi->rate_ctl = cpu_to_le16(rate_ctl);
 
-	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
-		if (sta && !is_mcast)
-			txwi->ack_ctl |= MT_TXWI_ACK_CTL_REQ;
+	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) && sta && !is_mcast)
+		txwi->ack_ctl |= MT_TXWI_ACK_CTL_REQ;
 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
 		txwi->ack_ctl |= MT_TXWI_ACK_CTL_NSEQ;
 
